@@ -110,8 +110,20 @@
 - **Контекст**: `AGENTS.md` — единый файл контекста для всех моделей
 - **Конфигурация**: `kilo.json` — стек, пути, линтинг, агенты
 - **Тестирование**: `backend/scripts/test_parser.py` — запуск парсеров на testdoc
-- **Сид-данные**: `backend/scripts/seed_ogz.py` — заполнение справочника ОГЗ-составов
+- **Сид-данные**: `backend/scripts/seed_ogz.py` — 6 составов с полными параметрами (PTM-диапазоны, dry_residue, density, REI, среда)
+
+## 8. Исправления (Bugfixes)
+
+### 8.1 Тест OGZ-калькулятора (CRITICAL)
+- `backend/scripts/test_ogz.py` импортировал удалённые функции `select_ogz_composition` и `calculate_material_consumption`
+- Переписан на новый API: `match_compositions()`, `calculate_ogz_full()`
+- Добавлены тестовые составы с полными параметрами (PTM-диапазоны, dry_residue, density)
+- Все 4 теста проходят
+
+### 8.2 Сид-данные ОГЗ-составов (WARNING)
+- `backend/scripts/seed_ogz.py`: SEED_DATA дополнен полями `dry_residue`, `density`, `min_ptm_mm`, `max_ptm_mm`, `rei_minutes`, `environment`
+- Без них PTM-матчинг не фильтровал составы по толщине
 
 ---
 
-*Последнее обновление: 13.05.2026*
+*Последнее обновление: 13.05.2026 — исправлены баги OGZ-модуля*
