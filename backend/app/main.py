@@ -16,6 +16,7 @@ from app.api.routes.search import router as search_router
 from app.api.routes.incoming import router as incoming_router
 from app.api.routes.employees import router as employees_router
 from app.api.routes.tasks import router as tasks_router
+from app.api.routes.offers import router as offers_router
 
 _log_level = getattr(logging, get_log_level().upper(), logging.INFO)
 logging.basicConfig(
@@ -63,6 +64,7 @@ app.include_router(search_router, prefix=settings.API_V1_PREFIX)
 app.include_router(incoming_router, prefix=settings.API_V1_PREFIX)
 app.include_router(employees_router, prefix=settings.API_V1_PREFIX)
 app.include_router(tasks_router, prefix=settings.API_V1_PREFIX)
+app.include_router(offers_router, prefix=settings.API_V1_PREFIX)
 
 
 @app.get("/health")
