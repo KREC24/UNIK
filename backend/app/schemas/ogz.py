@@ -39,7 +39,7 @@ class OgzCalculationRequest(BaseModel):
     items: list[OgzLineItemInput] = Field(default_factory=list)
     line_item_ids: list[UUID] = Field(default_factory=list)
     rei: int = Field(ge=15, le=240, description="Предел огнестойкости, мин")
-    environment: str = Field(default="сухая", description="Среда: сухая / влажная / агрессивная")
+    environment: str | None = Field(default=None, description="Среда: сухая / влажная / агрессивная. Если не указана — из настроек админа.")
 
 
 class OgzPositionResult(BaseModel):

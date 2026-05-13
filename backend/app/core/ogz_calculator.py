@@ -233,6 +233,21 @@ def calculate_ogz_full(
     composition_info: dict = {
         "rei_minutes": _nearest_rei(rei_minutes),
         "environment": environment,
+        "grunt_name": "не подобран",
+        "grunt_rate_kgm2": 0.0,
+        "grunt_price_per_kg": 0.0,
+        "grunt_dry_residue": None,
+        "grunt_density": None,
+        "kraska_name": "не подобран",
+        "kraska_rate_kgm2mm": 0.0,
+        "kraska_price_per_kg": 0.0,
+        "kraska_dry_residue": None,
+        "kraska_density": None,
+        "finish_name": "не подобран",
+        "finish_rate_kgm2": 0.0,
+        "finish_price_per_kg": 0.0,
+        "finish_dry_residue": None,
+        "finish_density": None,
     }
 
     for item in items:

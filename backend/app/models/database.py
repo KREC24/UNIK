@@ -9,9 +9,10 @@ from sqlalchemy import (
 )
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
+from sqlalchemy.ext.asyncio import AsyncAttrs
 
 
-class Base(DeclarativeBase):
+class Base(AsyncAttrs, DeclarativeBase):
     pass
 
 
@@ -44,6 +45,14 @@ class OfferStatus(str, PyEnum):
     SIGNED = "signed"
 
 
+class IncomingStatus(str, PyEnum):
+    PENDING = "pending"
+    MATCHED = "matched"
+    PROCESSING = "processing"
+    PROCESSED = "processed"
+    FAILED = "failed"
+
+
 class Project(Base):
     __tablename__ = "projects"
 
@@ -58,6 +67,7 @@ class Project(Base):
     batches: Mapped[list["DocumentBatch"]] = relationship(back_populates="project", cascade="all, delete-orphan")
     line_items: Mapped[list["LineItem"]] = relationship(back_populates="project", cascade="all, delete-orphan")
     commercial_offers: Mapped[list["CommercialOffer"]] = relationship(back_populates="project", cascade="all, delete-orphan")
+    client: Mapped["Client | None"] = relationship(back_populates="projects")
 
 
 class Client(Base):
@@ -66,6 +76,7 @@ class Client(Base):
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     name: Mapped[str] = mapped_column(String(500), nullable=False)
     inn: Mapped[str] = mapped_column(String(20), nullable=True)
+    email: Mapped[str] = mapped_column(String(255), nullable=True, index=True)
     contacts: Mapped[dict | None] = mapped_column(JSON, nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
 
@@ -164,3 +175,80 @@ class CommercialOffer(Base):
     status: Mapped[OfferStatus] = mapped_column(Enum(OfferStatus), default=OfferStatus.DRAFT)
 
     project: Mapped["Project"] = relationship(back_populates="commercial_offers")
+
+
+class IncomingRequest(Base):
+    __tablename__ = "incoming_requests"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    client_id: Mapped[uuid.UUID | None] = mapped_column(UUID(as_uuid=True), ForeignKey("clients.id"), nullable=True)
+    project_id: Mapped[uuid.UUID | None] = mapped_column(UUID(as_uuid=True), ForeignKey("projects.id"), nullable=True)
+    sender_email: Mapped[str] = mapped_column(String(320), nullable=False, index=True)
+    sender_name: Mapped[str] = mapped_column(String(500), nullable=True)
+    subject: Mapped[str] = mapped_column(String(1000), nullable=True)
+    body_preview: Mapped[str] = mapped_column(Text, nullable=True)
+    attachments: Mapped[list[str] | None] = mapped_column(JSON, nullable=True)
+    status: Mapped[IncomingStatus] = mapped_column(Enum(IncomingStatus), default=IncomingStatus.PENDING)
+    matched_by: Mapped[str] = mapped_column(String(50), nullable=True)
+    result_batch_id: Mapped[uuid.UUID | None] = mapped_column(UUID(as_uuid=True), nullable=True)
+    error_message: Mapped[str] = mapped_column(Text, nullable=True)
+    received_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, index=True)
+    processed_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+
+    client: Mapped["Client | None"] = relationship(foreign_keys=[client_id])
+    project: Mapped["Project | None"] = relationship(foreign_keys=[project_id])
+
+
+class EmployeeRole(str, PyEnum):
+    CHIEF_ENGINEER = "chief_engineer"
+    SHOP_MASTER = "shop_master"
+    WORKER = "worker"
+    MANAGER = "manager"
+    SUPPLY = "supply"
+
+
+class Employee(Base):
+    __tablename__ = "employees"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    full_name: Mapped[str] = mapped_column(String(300), nullable=False)
+    telegram_id: Mapped[str | None] = mapped_column(String(100), nullable=True, index=True)
+    role: Mapped[EmployeeRole] = mapped_column(Enum(EmployeeRole), default=EmployeeRole.WORKER)
+    department: Mapped[str] = mapped_column(String(200), nullable=True)
+    is_active: Mapped[bool] = mapped_column(default=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+
+
+class TaskStatus(str, PyEnum):
+    PENDING = "pending"
+    ACCEPTED = "accepted"
+    IN_WORK = "in_work"
+    DONE = "done"
+    QUESTION = "question"
+    REJECTED = "rejected"
+
+
+class TaskAssignment(Base):
+    __tablename__ = "task_assignments"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    project_id: Mapped[uuid.UUID | None] = mapped_column(UUID(as_uuid=True), ForeignKey("projects.id"), nullable=True)
+    line_item_id: Mapped[uuid.UUID | None] = mapped_column(UUID(as_uuid=True), ForeignKey("line_items.id"), nullable=True)
+    assigned_to: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("employees.id"), nullable=False)
+    assigned_by: Mapped[uuid.UUID | None] = mapped_column(UUID(as_uuid=True), ForeignKey("employees.id"), nullable=True)
+    mark: Mapped[str] = mapped_column(String(100), nullable=False)
+    quantity: Mapped[int] = mapped_column(Integer, default=1)
+    total_weight_kg: Mapped[Decimal | None] = mapped_column(Numeric(12, 2), nullable=True)
+    drawing_url: Mapped[str] = mapped_column(String(1000), nullable=True)
+    status: Mapped[TaskStatus] = mapped_column(Enum(TaskStatus), default=TaskStatus.PENDING)
+    deadline: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+    notes: Mapped[str] = mapped_column(Text, nullable=True)
+    telegram_msg_id: Mapped[str | None] = mapped_column(String(100), nullable=True)
+    status_changed_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, index=True)
+
+    project: Mapped["Project | None"] = relationship(foreign_keys=[project_id])
+    line_item: Mapped["LineItem | None"] = relationship(foreign_keys=[line_item_id])
+    employee: Mapped["Employee"] = relationship(foreign_keys=[assigned_to])
+    creator: Mapped["Employee | None"] = relationship(foreign_keys=[assigned_by])

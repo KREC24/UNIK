@@ -65,6 +65,14 @@ class ProjectCreateSchema(BaseModel):
     external_code: Optional[str] = None
     name: Optional[str] = None
     stage: Optional[str] = None
+    client_id: Optional[UUID] = None
+
+
+class ProjectUpdateSchema(BaseModel):
+    external_code: Optional[str] = None
+    name: Optional[str] = None
+    stage: Optional[str] = None
+    client_id: Optional[UUID] = None
 
 
 class ProjectSchema(BaseModel):
@@ -72,6 +80,30 @@ class ProjectSchema(BaseModel):
     external_code: Optional[str] = None
     name: Optional[str] = None
     stage: Optional[str] = None
+    client_id: Optional[UUID] = None
+    created_at: datetime
+    updated_at: datetime | None = None
+
+    model_config = {"from_attributes": True}
+
+
+class ClientCreateSchema(BaseModel):
+    name: str
+    inn: Optional[str] = None
+    contacts: dict = Field(default_factory=dict)
+
+
+class ClientUpdateSchema(BaseModel):
+    name: Optional[str] = None
+    inn: Optional[str] = None
+    contacts: Optional[dict] = None
+
+
+class ClientSchema(BaseModel):
+    id: UUID
+    name: str
+    inn: Optional[str] = None
+    contacts: dict = Field(default_factory=dict)
     created_at: datetime
 
     model_config = {"from_attributes": True}
