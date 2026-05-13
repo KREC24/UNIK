@@ -11,10 +11,9 @@ from app.services.parsing_service import (
     parse_shipping_list, parse_general_data, parse_revC04, auto_detect_and_parse,
 )
 from app.services.export_service import export_json, export_csv, export_xlsx
+from app.services.project_service import store_batch, get_batch
 
 router = APIRouter(prefix="/parse", tags=["Parser"])
-
-_in_memory_results: dict[str, ParseResultSchema] = {}
 
 
 @router.post("/upload", response_model=ParseResultSchema)
@@ -48,7 +47,7 @@ async def upload_pdf(
         raise HTTPException(500, f"Ошибка парсинга: {e}")
 
     batch_id = uuid.uuid4().hex
-    _in_memory_results[batch_id] = result
+    store_batch(batch_id, result)
 
     return JSONResponse(
         content={
@@ -60,7 +59,7 @@ async def upload_pdf(
 
 @router.get("/batches/{batch_id}", response_model=ParseResultSchema)
 async def get_batch_status(batch_id: str):
-    result = _in_memory_results.get(batch_id)
+    result = get_batch(batch_id)
     if not result:
         raise HTTPException(404, "Пакет не найден")
     return JSONResponse(content=result.model_dump())
@@ -68,7 +67,7 @@ async def get_batch_status(batch_id: str):
 
 @router.get("/batches/{batch_id}/preview")
 async def preview_batch(batch_id: str):
-    result = _in_memory_results.get(batch_id)
+    result = get_batch(batch_id)
     if not result:
         raise HTTPException(404, "Пакет не найден")
     return JSONResponse(content={
@@ -83,7 +82,7 @@ async def preview_batch(batch_id: str):
 
 @router.get("/batches/{batch_id}/export/json")
 async def export_batch_json(batch_id: str):
-    result = _in_memory_results.get(batch_id)
+    result = get_batch(batch_id)
     if not result:
         raise HTTPException(404, "Пакет не найден")
     return export_json(result)
@@ -91,7 +90,7 @@ async def export_batch_json(batch_id: str):
 
 @router.get("/batches/{batch_id}/export/csv")
 async def export_batch_csv(batch_id: str):
-    result = _in_memory_results.get(batch_id)
+    result = get_batch(batch_id)
     if not result:
         raise HTTPException(404, "Пакет не найден")
     return export_csv(result)
@@ -99,7 +98,7 @@ async def export_batch_csv(batch_id: str):
 
 @router.get("/batches/{batch_id}/export/xlsx")
 async def export_batch_xlsx(batch_id: str):
-    result = _in_memory_results.get(batch_id)
+    result = get_batch(batch_id)
     if not result:
         raise HTTPException(404, "Пакет не найден")
     return export_xlsx(result)
