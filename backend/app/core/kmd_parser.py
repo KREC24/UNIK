@@ -23,8 +23,8 @@ from .parser_engine import BaseParser, ParseResult
 
 logger = logging.getLogger(__name__)
 
-MARK_PATTERN = re.compile(r"^[A-ZА-Я][A-ZА-Я0-9]*[-.][0-9]+$|^[A-ZА-Я]+[-\s]?[0-9]+$")
-DIMENSION_PATTERN = re.compile(r"^\d{2,5}$")
+MARK_PATTERN = re.compile(r"^[A-ZА-Я][A-ZА-Я0-9]*([.-][0-9]+)+$|^[A-ZА-Я]+[-\s]?[0-9]+$")
+DIMENSION_PATTERN = re.compile(r"^\d{1,5}$")
 FLOAT_PATTERN = re.compile(r"^\d+([.,]\d+)?$")
 INT_PATTERN = re.compile(r"^\d+$")
 SUMMARY_PATTERN = re.compile(r"^(ИТОГО|ВСЕГО|∑|ВСЕГО ПО)", re.IGNORECASE)
@@ -40,7 +40,7 @@ RUSSIAN_TYPE_NAMES = {
     "козырек": "Козырек", "ограждение": "Ограждение",
     "распорка": "Распорка", "стремянка": "Стремянка",
     "прогон": "Прогон", "ребро": "Ребро", "упор": "Упор",
-    "монтажная": "Монтажная деталь", "деталь": "Деталь",
+    "монтажная": "Монтажная", "деталь": "Деталь",
     "лестница": "Лестница", "рельс": "Рельс", "стропило": "Стропило",
     "нащельник": "Нащельник", "фланец": "Фланец",
     "косынка": "Косынка", "планка": "Планка", "швеллер": "Швеллер",
@@ -61,7 +61,7 @@ def _is_mark(token: str) -> bool:
 
 
 def _is_dimension(token: str) -> bool:
-    return bool(DIMENSION_PATTERN.match(token)) and 10 <= int(token) <= 25000
+    return bool(DIMENSION_PATTERN.match(token)) and 3 <= int(token) <= 25000
 
 
 def _is_float(token: str) -> bool:
@@ -183,10 +183,34 @@ class KmdShippingParser(BaseParser):
                     ):
                         name = RUSSIAN_TYPE_NAMES.get(token.lower(), token)
                         sequence.append(name)
-                        state = "quantity"
+                        # Look ahead for multi-word type names (Монтажная деталь, Линейный извещатель...)
+                        if i + 1 < len(tokens):
+                            next_t = tokens[i + 1]
+                            if (not _is_int(next_t) and not _is_float(next_t)
+                                    and not _is_mark(next_t) and len(next_t) > 1):
+                                state = "type_name_cont"
+                            else:
+                                state = "quantity"
+                        else:
+                            state = "quantity"
                         i += 1
                     else:
                         break
+                elif state == "type_name_cont":
+                    if not _is_int(token) and not _is_float(token) and not _is_mark(token):
+                        sequence[-1] = sequence[-1] + " " + token
+                        if i + 1 < len(tokens):
+                            next_t = tokens[i + 1]
+                            if (not _is_int(next_t) and not _is_float(next_t)
+                                    and not _is_mark(next_t) and len(next_t) > 1):
+                                state = "type_name_cont"
+                            else:
+                                state = "quantity"
+                        else:
+                            state = "quantity"
+                        i += 1
+                    else:
+                        state = "quantity"
                 elif state == "quantity":
                     if _is_int(token):
                         sequence.append(int(token))
@@ -284,8 +308,6 @@ class KmdShippingParser(BaseParser):
         for line in table_lines:
             tokens = line.split()
             if not tokens:
-                continue
-            if any(kw.lower() in line.lower() for kw in SKIP_WORDS):
                 continue
             if SUMMARY_PATTERN.search(line):
                 continue

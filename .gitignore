@@ -17,3 +17,9 @@ Thumbs.db
 # Frontend
 frontend/dist/
 frontend/node_modules/
+
+# Large test data
+testdoc1_extracted/
+testdoc/
+testxl/
+*.db
