@@ -1,0 +1,26 @@
+{
+  "version": "1.0",
+  "name": "UNIK ERP",
+  "description": "ERP-система для строительного холдинга: ОГЗ, CRM, снабжение, КП",
+  "stack": {
+    "backend": "Python 3.12 + FastAPI",
+    "database": "PostgreSQL + SQLAlchemy + Alembic",
+    "frontend": "React + TypeScript + Vite"
+  },
+  "paths": {
+    "backend": "backend/",
+    "frontend": "frontend/",
+    "docs": "docs/",
+    "testData": "testdoc/",
+    "testReference": "testxl/"
+  },
+  "agents": {
+    "parser": ".kilo/agent/parser-agent.md",
+    "ogz": ".kilo/agent/ogz-agent.md",
+    "crm": ".kilo/agent/crm-agent.md"
+  },
+  "lint": {
+    "python": "ruff check backend/",
+    "typecheck": "python -m py_compile backend/app/**/*.py"
+  }
+}
