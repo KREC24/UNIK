@@ -30,8 +30,8 @@ def _ensure_defaults():
                 "density": Decimal("1.40"),
                 "min_ptm_mm": Decimal("1.00"),
                 "max_ptm_mm": Decimal("50.00"),
-                "rei_minutes": 60,
-                "environment": "сухая",
+                "rei_minutes": None,
+                "environment": None,
             },
             {
                 "id": uuid.UUID("a0000000-0000-0000-0000-000000000002"),
@@ -43,8 +43,8 @@ def _ensure_defaults():
                 "density": Decimal("1.50"),
                 "min_ptm_mm": Decimal("1.00"),
                 "max_ptm_mm": Decimal("50.00"),
-                "rei_minutes": 60,
-                "environment": "сухая",
+                "rei_minutes": None,
+                "environment": None,
             },
             {
                 "id": uuid.UUID("a0000000-0000-0000-0000-000000000003"),
@@ -56,8 +56,8 @@ def _ensure_defaults():
                 "density": Decimal("1.20"),
                 "min_ptm_mm": Decimal("1.00"),
                 "max_ptm_mm": Decimal("50.00"),
-                "rei_minutes": 60,
-                "environment": "сухая",
+                "rei_minutes": None,
+                "environment": None,
             },
         ])
 
