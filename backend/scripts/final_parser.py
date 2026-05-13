@@ -52,10 +52,10 @@ gsub     = fmt(font_size=9, bold=True, align="center", valign="vcenter", bg_colo
 data_c   = fmt(font_size=10, align="center", valign="vcenter")
 data_n   = fmt(font_size=10, align="center", valign="vcenter", num_format="0.0")
 data_a   = fmt(font_size=10, align="center", valign="vcenter", num_format="0.00")
-tot_l    = fmt(font_size=10, bold=True, align="left", valign="vcenter", bg_color="#D9D9D9")
-tot_n    = fmt(font_size=10, bold=True, align="center", valign="vcenter", bg_color="#D9D9D9", num_format="0.0")
-tot_a    = fmt(font_size=10, bold=True, align="center", valign="vcenter", bg_color="#D9D9D9", num_format="0.00")
-tot_e    = fmt(font_size=10, bold=True, align="center", valign="vcenter", bg_color="#D9D9D9")
+tot_l    = fmt(font_size=11, bold=True, align="left", valign="vcenter", bg_color="#D9D9D9")
+tot_n    = fmt(font_size=11, bold=True, align="center", valign="vcenter", bg_color="#D9D9D9", num_format="0.0")
+tot_a    = fmt(font_size=11, bold=True, align="center", valign="vcenter", bg_color="#D9D9D9", num_format="0.00")
+tot_e    = fmt(font_size=11, bold=True, align="center", valign="vcenter", bg_color="#D9D9D9")
 
 # ── Метаданные R0-R6 ──
 ws.merge_range(0, 0, 0, N - 1, "Листов в разделе", title_f)
