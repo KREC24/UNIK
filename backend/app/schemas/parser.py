@@ -17,6 +17,7 @@ class LineItemSchema(BaseModel):
     total_weight_kg: Optional[Decimal] = None
     unit_area_m2: Optional[Decimal] = None
     total_area_m2: Optional[Decimal] = None
+    ptm: Optional[Decimal] = None
     ogz_notes: Optional[str] = None
     profile_type: Optional[str] = None
     steel_grade: Optional[str] = None

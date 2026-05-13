@@ -16,6 +16,7 @@ import re
 import logging
 import pdfplumber
 from pathlib import Path
+from decimal import Decimal, InvalidOperation
 from typing import Optional
 
 from .parser_engine import BaseParser, ParseResult
@@ -69,6 +70,27 @@ def _is_float(token: str) -> bool:
 
 def _is_int(token: str) -> bool:
     return bool(INT_PATTERN.match(token))
+
+
+STEEL_DENSITY_MM = Decimal("7.85")
+
+
+def _calc_ptm(item: dict) -> None:
+    """Автоматически рассчитывает приведённую толщину металла (PTM)."""
+    if item.get("ptm") is not None:
+        return
+    try:
+        mass = item.get("total_weight_kg") or item.get("unit_weight_kg")
+        area = item.get("total_area_m2") or item.get("unit_area_m2")
+        if mass is not None and area is not None:
+            m = Decimal(str(mass))
+            a = Decimal(str(area))
+            if a > 0:
+                item["ptm"] = float((m / (a * STEEL_DENSITY_MM)).quantize(Decimal("0.01")))
+                return
+    except (InvalidOperation, ValueError, TypeError):
+        pass
+    item["ptm"] = None
 
 
 class KmdShippingParser(BaseParser):
@@ -225,6 +247,7 @@ class KmdShippingParser(BaseParser):
             "length_x": None, "width_y": None, "height_z": None,
             "unit_weight_kg": None, "total_weight_kg": None,
             "unit_area_m2": None, "total_area_m2": None, "position": None,
+            "ptm": None,
         }
 
         idx = 0
@@ -251,6 +274,8 @@ class KmdShippingParser(BaseParser):
             if all(isinstance(chunk[idx + j], (int, float)) for j in range(2)):
                 item["unit_area_m2"] = chunk[idx]
                 item["total_area_m2"] = chunk[idx + 1]
+
+        _calc_ptm(item)
 
         return item
 

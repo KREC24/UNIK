@@ -39,6 +39,8 @@ class ItemStatus(str, PyEnum):
 class OfferStatus(str, PyEnum):
     DRAFT = "draft"
     SENT = "sent"
+    ACCEPTED = "accepted"
+    REJECTED = "rejected"
     SIGNED = "signed"
 
 
@@ -105,6 +107,7 @@ class LineItem(Base):
     total_weight_kg: Mapped[Decimal | None] = mapped_column(Numeric(12, 2), nullable=True)
     unit_area_m2: Mapped[Decimal | None] = mapped_column(Numeric(10, 4), nullable=True)
     total_area_m2: Mapped[Decimal | None] = mapped_column(Numeric(12, 4), nullable=True)
+    ptm: Mapped[Decimal | None] = mapped_column(Numeric(10, 4), nullable=True)
     ogz_notes: Mapped[str | None] = mapped_column(Text, nullable=True)
     profile_type: Mapped[str | None] = mapped_column(String(50), nullable=True)
     steel_grade: Mapped[str | None] = mapped_column(String(20), nullable=True)
@@ -137,6 +140,12 @@ class OgzComposition(Base):
     composition_type: Mapped[str] = mapped_column(String(50), nullable=False)
     consumption_rate: Mapped[Decimal | None] = mapped_column(Numeric(10, 4), nullable=True)
     price_per_kg: Mapped[Decimal | None] = mapped_column(Numeric(12, 2), nullable=True)
+    dry_residue: Mapped[Decimal | None] = mapped_column(Numeric(5, 1), nullable=True)
+    density: Mapped[Decimal | None] = mapped_column(Numeric(5, 2), nullable=True)
+    min_ptm_mm: Mapped[Decimal | None] = mapped_column(Numeric(8, 4), nullable=True)
+    max_ptm_mm: Mapped[Decimal | None] = mapped_column(Numeric(8, 4), nullable=True)
+    rei_minutes: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    environment: Mapped[str | None] = mapped_column(String(30), nullable=True)
     supplier_id: Mapped[uuid.UUID | None] = mapped_column(UUID(as_uuid=True), nullable=True)
 
 
@@ -151,6 +160,7 @@ class CommercialOffer(Base):
     material_cost: Mapped[Decimal | None] = mapped_column(Numeric(14, 2), nullable=True)
     work_cost: Mapped[Decimal | None] = mapped_column(Numeric(14, 2), nullable=True)
     total_cost: Mapped[Decimal | None] = mapped_column(Numeric(14, 2), nullable=True)
+    version: Mapped[int] = mapped_column(Integer, default=1)
     status: Mapped[OfferStatus] = mapped_column(Enum(OfferStatus), default=OfferStatus.DRAFT)
 
     project: Mapped["Project"] = relationship(back_populates="commercial_offers")

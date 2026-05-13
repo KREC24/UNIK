@@ -14,7 +14,7 @@ project_root = Path(__file__).parent.parent.parent
 backend_dir = project_root / "backend"
 sys.path.insert(0, str(backend_dir))
 
-from app.services.parsing_service import parse_shipping_list, parse_general_data
+from app.services.parsing_service import parse_shipping_list, parse_general_data, parse_revC04
 
 TESTDOC = project_root / "testdoc"
 TESTXL = project_root / "testxl"
@@ -111,6 +111,62 @@ def test_general_data_parser():
     return result
 
 
+def test_revC04_parser():
+    pdf_path = find_file("revC04", TESTDOC) or find_file("rev", TESTDOC)
+    if not pdf_path:
+        print("[WARN] Не найден PDF revC04")
+        return None
+
+    print(f"\n[TEST] Парсинг revC04: {pdf_path.name}")
+    result = parse_revC04(pdf_path)
+
+    print(f"  Распознано строк: {result.total_rows_parsed} / {result.total_rows_raw}")
+    print(f"  Успешность: {result.success_rate:.1%}")
+    print(f"  Нераспознано: {len(result.unrecognized_rows)}")
+    print(f"  Ошибок: {len(result.errors)}")
+    if result.errors:
+        for e in result.errors:
+            print(f"    - {e[:200]}")
+
+    if result.metadata.project_code:
+        print(f"  Проект: {result.metadata.project_code}")
+    if result.metadata.object_name:
+        print(f"  Объект: {result.metadata.object_name}")
+
+    revs = result.metadata.model_dump().get("revisions", [])
+    if revs:
+        print(f"  Ревизий: {len(revs)}")
+
+    print("\n  Первые 25 строк:")
+    for item in result.items[:25]:
+        d = item.model_dump()
+        print(
+            f"    #{d.get('position') or '-'} | {d.get('mark') or '-'} | "
+            f"{d.get('profile_type') or '-'} | steel={d.get('steel_grade') or '-'} | "
+            f"profile={d.get('ogz_notes') or '-'} | GOST={d.get('gost_code') or '-'}"
+        )
+
+    print("\n  Последние 10 строк:")
+    for item in result.items[-10:]:
+        d = item.model_dump()
+        print(
+            f"    #{d.get('position') or '-'} | {d.get('mark') or '-'} | "
+            f"{d.get('profile_type') or '-'} | steel={d.get('steel_grade') or '-'} | "
+            f"profile={d.get('ogz_notes') or '-'}"
+        )
+
+    profiles_by_type = {}
+    for item in result.items:
+        pt = item.profile_type or "прочее"
+        profiles_by_type[pt] = profiles_by_type.get(pt, 0) + 1
+
+    print(f"\n  Распределение по типам профилей:")
+    for pt, count in sorted(profiles_by_type.items()):
+        print(f"    {pt}: {count}")
+
+    return result
+
+
 def compare_with_reference(shipping_result):
     import pandas as pd
 
@@ -163,12 +219,15 @@ if __name__ == "__main__":
 
     shipping = test_shipping_parser()
     general = test_general_data_parser()
+    revc04 = test_revC04_parser()
 
     if shipping:
         compare_with_reference(shipping)
         export_results(shipping, "shipping")
     if general:
         export_results(general, "general")
+    if revc04:
+        export_results(revc04, "revC04")
 
     print("\n" + "=" * 70)
     print("Тестирование завершено.")

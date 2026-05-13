@@ -42,7 +42,7 @@ def export_csv(result: ParseResultSchema) -> StreamingResponse:
         "position", "mark", "type_name", "quantity",
         "length_x", "width_y", "height_z",
         "unit_weight_kg", "total_weight_kg",
-        "unit_area_m2", "total_area_m2",
+        "unit_area_m2", "total_area_m2", "ptm",
         "ogz_notes", "steel_grade", "profile_type",
     ]
     writer = csv.DictWriter(output, fieldnames=fieldnames, extrasaction="ignore")

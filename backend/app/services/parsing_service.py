@@ -4,6 +4,7 @@ from typing import Optional
 
 from app.core.kmd_parser import KmdShippingParser
 from app.core.general_data_parser import GeneralDataParser
+from app.core.revC04_parser import RevC04Parser
 from app.core.parser_engine import ParseResult
 from app.schemas.parser import (
     LineItemSchema, UnrecognizedRowSchema,
@@ -27,6 +28,7 @@ def _result_to_schema(result: ParseResult) -> ParseResultSchema:
             total_weight_kg=item.get("total_weight_kg"),
             unit_area_m2=item.get("unit_area_m2"),
             total_area_m2=item.get("total_area_m2"),
+            ptm=item.get("ptm"),
             ogz_notes=item.get("ogz_notes"),
             profile_type=item.get("profile_type"),
             steel_grade=item.get("steel_grade"),
@@ -75,6 +77,13 @@ def parse_general_data(file_path: Path) -> ParseResultSchema:
     return _result_to_schema(result)
 
 
+def parse_revC04(file_path: Path) -> ParseResultSchema:
+    """Парсинг пакета КМД revC04 (34 стр.): элементы + профили стали."""
+    parser = RevC04Parser(file_path)
+    result = parser.parse()
+    return _result_to_schema(result)
+
+
 def auto_detect_and_parse(file_path: Path) -> ParseResultSchema:
     """Автоопределение типа документа и парсинг."""
     name_lower = file_path.name.lower()
@@ -82,4 +91,6 @@ def auto_detect_and_parse(file_path: Path) -> ParseResultSchema:
         return parse_shipping_list(file_path)
     if "общие" in name_lower or "общие данные" in name_lower or "л.1" in name_lower:
         return parse_general_data(file_path)
+    if "revc04" in name_lower or "rev" in name_lower:
+        return parse_revC04(file_path)
     return parse_shipping_list(file_path)

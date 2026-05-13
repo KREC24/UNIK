@@ -8,7 +8,7 @@ from fastapi.responses import JSONResponse
 from app.config import settings
 from app.schemas.parser import ParseResultSchema
 from app.services.parsing_service import (
-    parse_shipping_list, parse_general_data, auto_detect_and_parse,
+    parse_shipping_list, parse_general_data, parse_revC04, auto_detect_and_parse,
 )
 from app.services.export_service import export_json, export_csv, export_xlsx
 
@@ -20,7 +20,7 @@ _in_memory_results: dict[str, ParseResultSchema] = {}
 @router.post("/upload", response_model=ParseResultSchema)
 async def upload_pdf(
     file: UploadFile = File(...),
-    parser_type: Optional[str] = Query(None, description="shipping | general | auto"),
+    parser_type: Optional[str] = Query(None, description="shipping | general | revC04 | auto"),
 ):
     if not file.filename or not file.filename.lower().endswith(".pdf"):
         raise HTTPException(400, "Принимаются только PDF-файлы")
@@ -40,6 +40,8 @@ async def upload_pdf(
             result = parse_shipping_list(file_path)
         elif parser_type == "general":
             result = parse_general_data(file_path)
+        elif parser_type == "revC04":
+            result = parse_revC04(file_path)
         else:
             result = auto_detect_and_parse(file_path)
     except Exception as e:
